@@ -43,8 +43,6 @@ The current bbox model is configured with 13 classes:
 
 - `yolo_bbox_training.py`: prepares the dataset structure and trains the YOLOv8 bbox model
 - `bbox_image_inference.py`: loads images from Google Drive and stores prediction outputs in JSON
-- `yolo_segmentation_training.py`: segmentation training script kept in the repository, but not part of the current bbox workflow
-- `segmentation_image_inference.py`: segmentation inference helper script kept for reference
 - `qr.py`: auxiliary QR code generation script
 
 ## Workflow
