@@ -1,6 +1,5 @@
 import os
 import random
-import re
 import shutil
 import subprocess
 import tarfile
@@ -66,14 +65,6 @@ names: ['pet_bottle', 'other_bottle', 'plastic_bag', 'box_shaped_case', 'other_c
 """
     )
     print("YAML configuration file created successfully.")
-
-
-def extract_class_from_filename(filename):
-    """Extract the class prefix from a file name."""
-    match = re.match(r"([a-zA-Z]+)", filename)
-    return match.group(1).lower() if match else None
-
-
 # Split source images by class and create placeholder bbox labels.
 source_dataset_dir = extracted_dir
 train_image_dir = os.path.join(train_root, "images")
