@@ -1,103 +1,56 @@
-# 🧠 YOLOv8 - Segmentação Automatizada com Imagens do Google Drive
+  <h1 align="center">LitterCoast</h1>
 
-Este projeto executa automaticamente um modelo YOLOv8 com **segmentação** em imagens armazenadas no Google Drive, utilizando o **Google Colab**. As predições são salvas em um arquivo JSON, com possibilidade de filtro por confiança mínima.
+  <p align="center">
+    <img src="https://img.shields.io/badge/Python-3.x-blue?logo=python">
+    <img src="https://img.shields.io/badge/YOLOv8-Ultralytics-orange">
+    <img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-red?logo=pytorch">
+    <img src="https://img.shields.io/badge/Computer%20Vision-Object%20Detection-green">
+    <img src="https://img.shields.io/badge/IEEE-OES-blue">
+  </p>
 
-## 🚀 Funcionalidades
+  LitterCoast is a computer vision project focused on detecting improperly discarded waste in coastal environments using deep learning.
 
-- 📂 Integração com Google Drive para buscar imagens automaticamente.
-- 🧠 Execução do modelo **YOLOv8 com segmentação**.
-- ✅ Filtragem por confiança (threshold ajustável).
-- 📄 Geração e atualização de um JSON com os resultados.
-- 🔁 Recuperação dos dados a partir do JSON.
-- 🔧 Pronto para rodar no **Google Colab**.
+  ## Overview
 
----
+  The current version of the project focuses on building and testing an **image detection pipeline** capable of identifying marine litter from images.
 
-## 📁 Estrutura Esperada
+  Implemented components include:
 
-📁 MeuDrive/
-└── 📁 imagens/
-├── img1.jpg
-├── img2.jpg
-└── ...
+  - Waste detection using **YOLOv8**
+  - Model training and evaluation using the **[Sea Computer Vision Project dataset](https://universe.roboflow.com/hongmo/sea-ezx3q)**
+  - Image storage workflow using **Google Drive**
+  - Collaborative image submission via **Google Forms**
 
----
+  ---
 
-## ⚙️ Como Usar
+  ## Detection Classes
 
-### 1. Clone este repositório ou copie o notebook para o Google Colab
+  The model currently detects the following waste categories:
 
-```bash
-git clone https://github.com/seuusuario/yolov8-segmentacao-colab.git
+  - Glass
+  - Metal
+  - Net
+  - PET Bottle
+  - Plastic Buoy
+  - Plastic Buoy China
+  - Plastic ETC
+  - Rope
+  - Styrofoam Box
+  - Styrofoam Buoy
+  - Styrofoam Piece
 
-```
+  These classes were selected based on materials commonly found in marine litter datasets.
 
-### 2. Monte o Google Drive no Colab
+  ---
 
-```bash
-from google.colab import drive
-drive.mount('/content/drive')
-```
+  ## Pipeline
 
-### 3. Carregue o modelo YOLOv8
+  The current workflow of the project is shown below:
 
-```bash
-from ultralytics import YOLO
-modelo = YOLO('yolov8n-seg.pt') # ou yolov8s-seg.pt, yolov8m-seg.pt etc.
-```
+  1. Users upload images through **Google Forms**
+  2. Images are stored in **Google Drive**
+  3. A **Google Colab notebook** retrieves the images
+  4. The **YOLOv8 model performs detection**
+  5. Processed images and results are saved back to Google Drive
 
-### 4. Execute a inferência nas imagens
-
-```bash
-processar_imagens(
-pasta_imagens='/content/drive/MyDrive/imagens/',
-modelo=modelo,
-json_saida='resultados.json',
-confianca_threshold=0.8
-)
-```
-
-### 5. Recuperar os dados do JSON
-
-```json
-dados = carregar_json('resultados.json')
-
-# Exemplo de Estrutura do JSON
-[
-    {
-        "imagem": "img1.jpg",
-        "predicoes": [
-            {
-                "classe": 0,
-                "coordenadas": [100, 50, 300, 200],
-                "confiança": 0.92,
-                "mascara": [[...]]
-            }
-        ]
-    }
-]
-```
-
-### 🛠️ Funções Principais
-
-```bash
-processar_imagens() Processa todas as imagens da pasta e salva/atualiza JSON
-carregar_json() Lê e retorna o conteúdo do JSON
-```
-
-✅ Requisitos
-
-```bash
-Python 3.8+
-
-Google Colab
-
-Ultralytics
-
-YOLOv8 com modelo .pt de segmentação (yolov8n-seg.pt, etc.)
-```
-
-📝 Observações
-Apenas predições com confiança superior ao threshold (por padrão, 80%) são salvas.
-
-A máscara é opcional e pode ser desabilitada conforme seu uso.
+  This architecture allows easy experimentation without requiring dedicated infrastructure.
