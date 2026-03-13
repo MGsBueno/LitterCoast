@@ -20,6 +20,10 @@ Implemented components include:
 - Model storage in Google Drive for later inference
 - Image ingestion and result storage through Google Drive
 
+The current dataset source is the **Sea Computer Vision Project**, which contains **8,674 labeled shoreline images** and is available on Roboflow:
+
+- https://universe.roboflow.com/hongmo/sea-ezx3q
+
 ## Detection Classes
 
 The current bbox model is configured with 13 classes:
@@ -48,7 +52,7 @@ The current bbox model is configured with 13 classes:
 
 1. Images are collected through a Google Forms workflow.
 2. Uploaded files are stored in Google Drive.
-3. The dataset is downloaded from an external link as an archive file such as `.zip` or `.7z`.
+3. The dataset is downloaded from an external link as an archive file such as `.zip` or `.tar`.
 4. In Google Colab, the dataset archive is extracted and prepared for training.
 5. The YOLOv8 bbox model is trained.
 6. The trained model file is saved to Google Drive.
