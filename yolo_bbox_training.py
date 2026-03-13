@@ -45,6 +45,8 @@ extract_archive(dataset_archive_path, extracted_dir)
 
 # Create training and validation directories if they do not exist.
 dataset_root = "/content/datasets/garbage_classification"
+train_root = os.path.join(dataset_root, "train")
+val_root = os.path.join(dataset_root, "val")
 os.makedirs(os.path.join(dataset_root, "train", "images"), exist_ok=True)
 os.makedirs(os.path.join(dataset_root, "train", "labels"), exist_ok=True)
 os.makedirs(os.path.join(dataset_root, "val", "images"), exist_ok=True)
@@ -54,10 +56,10 @@ os.makedirs(os.path.join(dataset_root, "val", "labels"), exist_ok=True)
 dataset_yaml_path = "/content/datasets/waste.yaml"
 with open(dataset_yaml_path, "w") as yaml_file:
     yaml_file.write(
-        """
-path: /content/datasets/waste
-train: /content/datasets/train/images
-val: /content/datasets/val/images
+        f"""
+path: {dataset_root}
+train: {train_root}/images
+val: {val_root}/images
 
 nc: 13
 names: ['pet_bottle', 'other_bottle', 'plastic_bag', 'box_shaped_case', 'other_container', 'rope', 'other_string', 'fishing_net', 'buoy', 'other_fishing_gear', 'styrene_foam', 'others', 'fragment']
@@ -73,11 +75,11 @@ def extract_class_from_filename(filename):
 
 
 # Split source images by class and create placeholder bbox labels.
-source_dataset_dir = "/content/datasets/6classes v2"
-train_image_dir = "/content/datasets/garbage-classification-6-classes-775class/train/images"
-val_image_dir = "/content/datasets/garbage-classification-6-classes-775class/val/images"
-train_label_dir = "/content/datasets/garbage-classification-6-classes-775class/train/labels"
-val_label_dir = "/content/datasets/garbage-classification-6-classes-775class/val/labels"
+source_dataset_dir = extracted_dir
+train_image_dir = os.path.join(train_root, "images")
+val_image_dir = os.path.join(val_root, "images")
+train_label_dir = os.path.join(train_root, "labels")
+val_label_dir = os.path.join(val_root, "labels")
 
 os.makedirs(train_image_dir, exist_ok=True)
 os.makedirs(val_image_dir, exist_ok=True)
