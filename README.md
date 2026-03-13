@@ -1,56 +1,71 @@
-  <h1 align="center">LitterCoast</h1>
+<h1 align="center">LitterCoast</h1>
 
-  <p align="center">
-    <img src="https://img.shields.io/badge/Python-3.x-blue?logo=python">
-    <img src="https://img.shields.io/badge/YOLOv8-Ultralytics-orange">
-    <img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-red?logo=pytorch">
-    <img src="https://img.shields.io/badge/Computer%20Vision-Object%20Detection-green">
-    <img src="https://img.shields.io/badge/IEEE-OES-blue">
-  </p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.x-blue?logo=python">
+  <img src="https://img.shields.io/badge/YOLOv8-Ultralytics-orange">
+  <img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-red?logo=pytorch">
+  <img src="https://img.shields.io/badge/Computer%20Vision-Bounding%20Box%20Detection-green">
+  <img src="https://img.shields.io/badge/Google%20Colab-Workflow-yellow">
+</p>
 
-  LitterCoast is a computer vision project focused on detecting improperly discarded waste in coastal environments using deep learning.
+LitterCoast is a computer vision project for detecting coastal and marine litter in images using YOLOv8 bounding boxes.
 
-  ## Overview
+## Overview
 
-  The current version of the project focuses on building and testing an **image detection pipeline** capable of identifying marine litter from images.
+This repository currently focuses on a **bounding box detection pipeline** for marine waste images.
 
-  Implemented components include:
+Implemented components include:
 
-  - Waste detection using **YOLOv8**
-  - Model training and evaluation using the **[Sea Computer Vision Project dataset](https://universe.roboflow.com/hongmo/sea-ezx3q)**
-  - Image storage workflow using **Google Drive**
-  - Collaborative image submission via **Google Forms**
+- YOLOv8-based object detection
+- Dataset extraction and preparation for training
+- Model training in Google Colab
+- Image ingestion and result storage through Google Drive
 
-  ---
+## Detection Classes
 
-  ## Detection Classes
+The current bbox model is configured with 13 classes:
 
-  The model currently detects the following waste categories:
+- pet_bottle
+- other_bottle
+- plastic_bag
+- box_shaped_case
+- other_container
+- rope
+- other_string
+- fishing_net
+- buoy
+- other_fishing_gear
+- styrene_foam
+- others
+- fragment
 
-  - Glass
-  - Metal
-  - Net
-  - PET Bottle
-  - Plastic Buoy
-  - Plastic Buoy China
-  - Plastic ETC
-  - Rope
-  - Styrofoam Box
-  - Styrofoam Buoy
-  - Styrofoam Piece
+## Repository Files
 
-  These classes were selected based on materials commonly found in marine litter datasets.
+- `yolo_bbox_training.py`: prepares the dataset structure and trains the YOLOv8 bbox model
+- `bbox_image_inference.py`: loads images from Google Drive and stores prediction outputs in JSON
+- `yolo_segmentation_training.py`: segmentation training script kept in the repository, but not part of the current bbox workflow
+- `segmentation_image_inference.py`: segmentation inference helper script kept for reference
+- `qr.py`: auxiliary QR code generation script
 
-  ---
+## Workflow
 
-  ## Pipeline
+1. Images are collected through a Google Forms workflow.
+2. Uploaded files are stored in Google Drive.
+3. In Google Colab, the dataset archive is extracted from Drive.
+4. The YOLOv8 bbox model is trained or used for inference.
+5. Predictions are written back to Google Drive as output data.
 
-  The current workflow of the project is shown below:
+## Execution Context
 
-  1. Users upload images through **Google Forms**
-  2. Images are stored in **Google Drive**
-  3. A **Google Colab notebook** retrieves the images
-  4. The **YOLOv8 model performs detection**
-  5. Processed images and results are saved back to Google Drive
+The current scripts are written around a **Google Colab + Google Drive** environment and use paths such as `/content/drive/...` and `/content/datasets/...`.
 
-  This architecture allows easy experimentation without requiring dedicated infrastructure.
+Before running the code, you should adapt:
+
+- dataset archive paths
+- Google Drive mount steps
+- output directories
+- any local environment dependency handling
+
+## Notes
+
+- This repository is using **bounding box detection**.
