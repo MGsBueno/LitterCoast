@@ -17,17 +17,38 @@ class ArchiveExtractor:
 
         if tarfile.is_tarfile(archive_path):
             with tarfile.open(archive_path, "r:*") as archive:
+                self._validate_tar_members(archive, output_dir)
                 archive.extractall(path=output_dir)
             print(f"Extracted tar archive to: {output_dir}")
             return
 
         if zipfile.is_zipfile(archive_path):
             with zipfile.ZipFile(archive_path, "r") as archive:
+                self._validate_zip_members(archive, output_dir)
                 archive.extractall(output_dir)
             print(f"Extracted zip archive to: {output_dir}")
             return
 
         raise ValueError(f"Unsupported archive format: {archive_path}")
+
+    def _validate_tar_members(self, archive: tarfile.TarFile, output_dir: Path) -> None:
+        for member in archive.getmembers():
+            self._validate_extraction_path(output_dir, member.name)
+
+    def _validate_zip_members(self, archive: zipfile.ZipFile, output_dir: Path) -> None:
+        for member in archive.infolist():
+            self._validate_extraction_path(output_dir, member.filename)
+
+    def _validate_extraction_path(self, output_dir: Path, member_name: str) -> None:
+        destination = (output_dir / member_name).resolve()
+        output_root = output_dir.resolve()
+        try:
+            is_within_output_dir = Path(destination).is_relative_to(output_root)
+        except AttributeError:
+            is_within_output_dir = str(destination).startswith(str(output_root))
+
+        if not is_within_output_dir:
+            raise ValueError(f"Unsafe archive member path detected: {member_name}")
 
 
 class DatasetPreparer:
