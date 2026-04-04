@@ -13,6 +13,8 @@ LitterCoast is a coastal waste detection project built around a YOLOv8 pipeline.
 
 The repository now follows a more modular and object-oriented structure so training, inference, and QR code generation can evolve independently without concentrating all logic in standalone scripts.
 
+The project was presented in the IEEE OES Ocean Challenge in 2025 as part of its early evolution.
+
 ## Versioning
 
 The initial project baseline was tagged as `v0.1.0-beta`.
@@ -355,3 +357,7 @@ python -m littercoast qr --link https://forms.gle/PLDgtbQkSxKboPfv7 --output qrc
 - Add authentication, authorization, CORS, and production hardening.
 - Add real database persistence for API-managed resources and history.
 - Build the frontend on top of the API while keeping the backend-first strategy.
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
