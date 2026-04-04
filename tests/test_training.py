@@ -1,9 +1,11 @@
 from pathlib import Path
+import tarfile
+import zipfile
 
 import pytest
 
 from littercoast.config import DetectionConfig, TrainingConfig
-from littercoast.training import DatasetPreparer, ModelTrainer
+from littercoast.training import ArchiveExtractor, DatasetPreparer, ModelTrainer
 
 
 def _create_fake_image(path: Path) -> None:
@@ -129,3 +131,34 @@ def test_model_trainer_orchestrates_extraction_preparation_and_training(monkeypa
             "task": "detect",
         }
     ]
+
+
+@pytest.mark.unit
+def test_archive_extractor_rejects_unsafe_tar_members(workspace_dir: Path) -> None:
+    archive_path = workspace_dir / "unsafe.tar"
+    extracted_dir = workspace_dir / "extracted"
+
+    malicious_file = workspace_dir / "payload.txt"
+    malicious_file.write_text("payload", encoding="utf-8")
+
+    with tarfile.open(archive_path, "w") as archive:
+        archive.add(malicious_file, arcname="../escape.txt")
+
+    extractor = ArchiveExtractor()
+
+    with pytest.raises(ValueError, match="Unsafe archive member path detected"):
+        extractor.extract(archive_path, extracted_dir)
+
+
+@pytest.mark.unit
+def test_archive_extractor_rejects_unsafe_zip_members(workspace_dir: Path) -> None:
+    archive_path = workspace_dir / "unsafe.zip"
+    extracted_dir = workspace_dir / "extracted"
+
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("../escape.txt", "payload")
+
+    extractor = ArchiveExtractor()
+
+    with pytest.raises(ValueError, match="Unsafe archive member path detected"):
+        extractor.extract(archive_path, extracted_dir)

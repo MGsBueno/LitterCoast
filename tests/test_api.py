@@ -1,12 +1,14 @@
 from pathlib import Path
+import os
 
 import pytest
 
 from littercoast.api import (
-    _apply_environment,
     _build_inference_config,
     _build_qr_config,
     _build_training_config,
+    _resolve_path_within_roots,
+    _resolve_request_environment,
     app,
 )
 from littercoast.config import AppEnvironment
@@ -21,10 +23,21 @@ def _get_route_endpoint(path: str, method: str):
 
 
 @pytest.mark.unit
-def test_apply_environment_updates_runtime_environment(monkeypatch) -> None:
+def test_resolve_request_environment_does_not_mutate_process_environment(monkeypatch) -> None:
+    original_environment = "colab"
+    monkeypatch.setenv("LITTERCOAST_ENVIRONMENT", original_environment)
+
+    result = _resolve_request_environment(AppEnvironment.LOCAL)
+
+    assert result == AppEnvironment.LOCAL
+    assert os.environ["LITTERCOAST_ENVIRONMENT"] == original_environment
+
+
+@pytest.mark.unit
+def test_resolve_request_environment_falls_back_to_default(monkeypatch) -> None:
     monkeypatch.delenv("LITTERCOAST_ENVIRONMENT", raising=False)
 
-    result = _apply_environment(AppEnvironment.LOCAL)
+    result = _resolve_request_environment(AppEnvironment.LOCAL)
 
     assert result == AppEnvironment.LOCAL
 
@@ -35,16 +48,16 @@ def test_build_training_config_applies_request_overrides(monkeypatch) -> None:
     monkeypatch.delenv("LITTERCOAST_DATASET_ROOT", raising=False)
     request = TrainingRequest(
         environment=AppEnvironment.LOCAL,
-        dataset_archive_path="./custom/dataset.zip",
-        dataset_root="./custom/dataset-root",
+        dataset_archive_path="./data/dataset.zip",
+        dataset_root="./data/custom-dataset-root",
         epochs=3,
         run_name="api-train",
     )
 
-    config = _build_training_config(request)
+    config = _build_training_config(request, AppEnvironment.LOCAL)
 
-    assert config.dataset_archive_path == Path("custom/dataset.zip")
-    assert config.dataset_root == Path("custom/dataset-root")
+    assert config.dataset_archive_path == (Path.cwd() / "data" / "dataset.zip").resolve()
+    assert config.dataset_root == (Path.cwd() / "data" / "custom-dataset-root").resolve()
     assert config.epochs == 3
     assert config.run_name == "api-train"
 
@@ -55,15 +68,15 @@ def test_build_inference_config_applies_request_overrides(monkeypatch) -> None:
     request = InferenceRequest(
         environment=AppEnvironment.LOCAL,
         model_path="./models/custom.pt",
-        image_directory="./images",
+        image_directory="./data/images",
         predictions_path="./outputs/predictions.json",
     )
 
-    config = _build_inference_config(request)
+    config = _build_inference_config(request, AppEnvironment.LOCAL)
 
-    assert config.model_path == Path("models/custom.pt")
-    assert config.image_directory == Path("images")
-    assert config.predictions_path == Path("outputs/predictions.json")
+    assert config.model_path == (Path.cwd() / "models" / "custom.pt").resolve()
+    assert config.image_directory == (Path.cwd() / "data" / "images").resolve()
+    assert config.predictions_path == (Path.cwd() / "outputs" / "predictions.json").resolve()
 
 
 @pytest.mark.unit
@@ -77,13 +90,21 @@ def test_build_qr_config_applies_request_overrides() -> None:
         border=1,
     )
 
-    config = _build_qr_config(request)
+    config = _build_qr_config(request, AppEnvironment.LOCAL)
 
     assert config.link == "https://example.com"
-    assert config.output_path == Path("outputs/qr.png")
+    assert config.output_path == (Path.cwd() / "outputs" / "qr.png").resolve()
     assert config.version == 2
     assert config.box_size == 6
     assert config.border == 1
+
+
+@pytest.mark.unit
+def test_resolve_path_within_roots_blocks_path_traversal() -> None:
+    allowed_root = Path.cwd() / "data"
+
+    with pytest.raises(ValueError, match="must stay within allowed roots"):
+        _resolve_path_within_roots(Path("../secret.txt"), (allowed_root,))
 
 
 @pytest.mark.unit
@@ -130,7 +151,7 @@ def test_train_endpoint_runs_trainer_and_returns_summary(monkeypatch) -> None:
     )
 
     assert captured["ran"] is True
-    assert captured["config"].dataset_root == Path("data/train-root")
+    assert captured["config"].dataset_root == (Path.cwd() / "data" / "train-root").resolve()
     assert response.message == "training finished"
     assert response.environment == AppEnvironment.LOCAL
     assert response.run_name == "api-run"
@@ -157,7 +178,7 @@ def test_infer_endpoint_runs_pipeline_and_returns_summary(monkeypatch) -> None:
         )
     )
 
-    assert captured["config"].predictions_path == Path("outputs/result.json")
+    assert captured["config"].predictions_path == (Path.cwd() / "outputs" / "result.json").resolve()
     assert response.message == "inference finished"
     assert response.predictions_count == 2
 
@@ -172,7 +193,7 @@ def test_qr_endpoint_runs_generator_and_returns_summary(monkeypatch) -> None:
             captured["config"] = config
 
         def generate(self):
-            return Path("./outputs/generated-qr.png")
+            return captured["config"].output_path
 
     monkeypatch.setattr("littercoast.qr_code.QRCodeGenerator", FakeGenerator)
 
@@ -183,6 +204,6 @@ def test_qr_endpoint_runs_generator_and_returns_summary(monkeypatch) -> None:
         )
     )
 
-    assert captured["config"].output_path == Path("outputs/generated-qr.png")
+    assert captured["config"].output_path == (Path.cwd() / "outputs" / "generated-qr.png").resolve()
     assert response.message == "qr code generated"
-    assert Path(response.output_path) == Path("outputs/generated-qr.png")
+    assert Path(response.output_path) == (Path.cwd() / "outputs" / "generated-qr.png").resolve()

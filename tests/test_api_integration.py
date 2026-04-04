@@ -48,12 +48,12 @@ def test_train_post_returns_training_summary(monkeypatch, api_client) -> None:
 
     assert response.status_code == 200
     assert captured["ran"] is True
-    assert captured["config"].dataset_root == Path("data/train-root")
+    assert captured["config"].dataset_root == (Path.cwd() / "data" / "train-root").resolve()
     assert response.json() == {
         "message": "training finished",
         "environment": "local",
-        "dataset_root": str(Path("data/train-root")),
-        "dataset_yaml_path": str(Path("data/waste.yaml")),
+        "dataset_root": str((Path.cwd() / "data" / "train-root").resolve()),
+        "dataset_yaml_path": str((Path.cwd() / "data" / "waste.yaml").resolve()),
         "run_name": "integration-train",
     }
 
@@ -80,11 +80,11 @@ def test_infer_post_returns_inference_summary(monkeypatch, api_client) -> None:
     )
 
     assert response.status_code == 200
-    assert captured["config"].predictions_path == Path("outputs/predictions.json")
+    assert captured["config"].predictions_path == (Path.cwd() / "outputs" / "predictions.json").resolve()
     assert response.json() == {
         "message": "inference finished",
         "environment": "local",
-        "predictions_path": str(Path("outputs/predictions.json")),
+        "predictions_path": str((Path.cwd() / "outputs" / "predictions.json").resolve()),
         "predictions_count": 2,
     }
 
@@ -98,7 +98,7 @@ def test_qr_post_returns_qr_summary(monkeypatch, api_client) -> None:
             captured["config"] = config
 
         def generate(self):
-            return Path("./outputs/generated-qr.png")
+            return captured["config"].output_path
 
     monkeypatch.setattr("littercoast.qr_code.QRCodeGenerator", FakeGenerator)
 
@@ -112,11 +112,11 @@ def test_qr_post_returns_qr_summary(monkeypatch, api_client) -> None:
     )
 
     assert response.status_code == 200
-    assert captured["config"].output_path == Path("outputs/generated-qr.png")
+    assert captured["config"].output_path == (Path.cwd() / "outputs" / "generated-qr.png").resolve()
     assert response.json() == {
         "message": "qr code generated",
         "environment": "local",
-        "output_path": str(Path("outputs/generated-qr.png")),
+        "output_path": str((Path.cwd() / "outputs" / "generated-qr.png").resolve()),
     }
 
 
@@ -169,3 +169,17 @@ def test_qr_post_returns_internal_error_for_unexpected_failure(monkeypatch, api_
 
     assert response.status_code == 500
     assert response.json() == {"detail": "qr generation failed: disk write failed"}
+
+
+@pytest.mark.integration
+def test_infer_post_rejects_path_outside_allowed_roots(api_client) -> None:
+    response = api_client.post(
+        "/infer",
+        json={
+            "environment": "local",
+            "predictions_path": "../outside/predictions.json",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "must stay within allowed roots" in response.json()["detail"]

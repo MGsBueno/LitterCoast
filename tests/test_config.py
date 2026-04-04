@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from littercoast.config import AppEnvironment, DEFAULT_CLASSES, DetectionConfig, TrainingConfig
+from littercoast.config import AppEnvironment, DEFAULT_CLASSES, DetectionConfig, InferenceConfig, TrainingConfig
 
 
 @pytest.mark.unit
@@ -34,6 +34,20 @@ def test_training_config_uses_local_environment_defaults(monkeypatch) -> None:
 
     assert config.dataset_archive_path == DEFAULT_LOCAL_TRAINING_ARCHIVE_PATH
     assert config.dataset_root == DEFAULT_LOCAL_DATASET_ROOT
+
+
+@pytest.mark.unit
+def test_inference_config_for_environment_uses_local_defaults(monkeypatch) -> None:
+    monkeypatch.setenv("LITTERCOAST_ENVIRONMENT", AppEnvironment.COLAB.value)
+    monkeypatch.delenv("LITTERCOAST_MODEL_PATH", raising=False)
+    monkeypatch.delenv("LITTERCOAST_IMAGE_DIRECTORY", raising=False)
+    monkeypatch.delenv("LITTERCOAST_PREDICTIONS_PATH", raising=False)
+
+    config = InferenceConfig.for_environment(AppEnvironment.LOCAL)
+
+    assert config.model_path == Path("models/yolov8_model.pt")
+    assert config.image_directory == Path("data/images")
+    assert config.predictions_path == Path("outputs/yolo_predictions.json")
 
 
 DEFAULT_LOCAL_TRAINING_ARCHIVE_PATH = Path("data/dataset.tar.gz")
