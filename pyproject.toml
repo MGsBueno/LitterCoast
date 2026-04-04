@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "littercoast"
+version = "0.2.0b0"
+description = "Coastal waste detection utilities with training, inference, and QR generation."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "Pillow",
+    "qrcode",
+    "ultralytics",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: fast isolated tests that mock external dependencies and do not run real training",
+    "integration: broader tests that exercise real integrations or heavier workflows",
+]

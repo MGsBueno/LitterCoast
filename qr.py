@@ -1,24 +1,14 @@
-import qrcode
+from pathlib import Path
+import sys
 
-# Link to convert into a QR code.
-link = "https://forms.gle/PLDgtbQkSxKboPfv7"
+PROJECT_ROOT = Path(__file__).resolve().parent
+SRC_DIR = PROJECT_ROOT / "src"
 
-# Create the QRCode object.
-qr = qrcode.QRCode(
-    version=1,
-    error_correction=qrcode.constants.ERROR_CORRECT_L,
-    box_size=10,
-    border=4,
-)
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-# Add the link to the QR code.
-qr.add_data(link)
-qr.make(fit=True)
+from littercoast.qr_code import QRCodeGenerator
 
-# Create the QR code image.
-image = qr.make_image(fill_color="black", back_color="white")
 
-# Save the generated image.
-image.save("qrcode_link.png")
-
-print("QR code generated and saved as 'qrcode_link.png'")
+if __name__ == "__main__":
+    QRCodeGenerator().generate()
