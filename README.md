@@ -13,20 +13,9 @@ LitterCoast is a coastal waste detection project built around a YOLOv8 pipeline.
 
 The repository now follows a more modular and object-oriented structure so training, inference, and QR code generation can evolve independently without concentrating all logic in standalone scripts.
 
+LitterCoast evolved from an experimental Colab-based prototype into a modular backend application with CLI, API, environment-aware configuration, and automated tests.
+
 The project was presented in the IEEE OES Ocean Challenge in 2025 as part of its early evolution.
-
-## Versioning
-
-The initial project baseline was tagged as `v0.1.0-beta`.
-
-This refactored line should be treated as a new iteration because the architecture changed significantly, introducing:
-
-- modular package structure
-- environment presets
-- automated tests
-- FastAPI service layer
-
-For that reason, this refactored line now follows the `v0.2.0-beta` release line.
 
 ## Product Direction
 
