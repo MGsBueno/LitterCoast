@@ -330,14 +330,6 @@ Already covered:
 - QR generation
 - typed request and response schemas
 
-Planned for the next backend increments:
-
-- integration tests for real HTTP flows
-- async job execution for long-running training
-- persistence for job history and prediction metadata
-- authentication and authorization
-- CORS and production hardening
-
 Examples with custom paths:
 
 ```bash
@@ -349,8 +341,9 @@ python -m littercoast qr --link https://forms.gle/PLDgtbQkSxKboPfv7 --output qrc
 ## Next Steps
 
 - Introduce structured logging instead of `print`.
-- Add integration tests for the API HTTP flows.
+- Expand integration coverage for real HTTP flows and failure scenarios with the real FastAPI test client.
 - Evolve training into asynchronous execution with status tracking.
 - Persist job history and inference metadata.
-- Add authentication, authorization, and API hardening for production.
+- Add authentication, authorization, CORS, and production hardening.
+- Add real database persistence for API-managed resources and history.
 - Build the frontend on top of the API while keeping the backend-first strategy.
