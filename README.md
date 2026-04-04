@@ -71,6 +71,14 @@ Install the package dependencies:
 pip install -e .
 ```
 
+Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+All default paths and runtime parameters can now be overridden through `.env`.
+
 Run with the preserved scripts:
 
 ```bash
