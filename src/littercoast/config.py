@@ -1,10 +1,17 @@
 from __future__ import annotations
 
-from enum import StrEnum
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 
 from .env import get_env_float, get_env_int, get_env_path, get_env_str, load_env_file
+
+
+try:
+    from enum import StrEnum
+except ImportError:  # pragma: no cover - Python 3.10 compatibility
+    class StrEnum(str, Enum):
+        pass
 
 
 load_env_file()
