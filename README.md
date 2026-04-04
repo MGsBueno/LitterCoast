@@ -129,7 +129,6 @@ Or use the package CLI:
 python -m littercoast train
 python -m littercoast infer
 python -m littercoast qr
-python -m littercoast api
 ```
 
 You can also pick the setup directly in the command:
@@ -190,6 +189,14 @@ Interactive documentation:
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
+In `local` mode, API-managed paths are restricted to project-safe roots:
+
+- `./data`
+- `./models`
+- `./outputs`
+
+The API validates these inputs and resolves accepted local paths to absolute paths in responses.
+
 ### Endpoints
 
 `GET /health`
@@ -234,8 +241,8 @@ Response example:
 {
   "message": "training finished",
   "environment": "local",
-  "dataset_root": "data/garbage_classification",
-  "dataset_yaml_path": "data/waste.yaml",
+  "dataset_root": "/absolute/path/to/project/data/garbage_classification",
+  "dataset_yaml_path": "/absolute/path/to/project/data/waste.yaml",
   "run_name": "garbage_detection_yolov8"
 }
 ```
@@ -259,7 +266,7 @@ Response example:
 {
   "message": "inference finished",
   "environment": "local",
-  "predictions_path": "outputs/yolo_predictions.json",
+  "predictions_path": "/absolute/path/to/project/outputs/yolo_predictions.json",
   "predictions_count": 12
 }
 ```
@@ -282,7 +289,7 @@ Response example:
 {
   "message": "qr code generated",
   "environment": "local",
-  "output_path": "outputs/qrcode_link.png"
+  "output_path": "/absolute/path/to/project/outputs/qrcode_link.png"
 }
 ```
 
@@ -329,6 +336,7 @@ Already covered:
 - inference orchestration
 - QR generation
 - typed request and response schemas
+- local path validation for API-managed filesystem operations
 
 Examples with custom paths:
 
