@@ -326,9 +326,11 @@ python -m littercoast infer --model /content/drive/My\ Drive/yolov8_model.pt --i
 python -m littercoast qr --link https://forms.gle/PLDgtbQkSxKboPfv7 --output qrcode_link.png
 ```
 
-## Next Structural Suggestions
+## Next Steps
 
-- Add automated tests for `DatasetPreparer` and `PredictionRepository`.
-- Move environment-specific paths to `.env` or a config file.
-- Introduce logging instead of `print`.
-- Add a dedicated `tests/` directory and CI validation.
+- Introduce structured logging instead of `print`.
+- Add integration tests for the API HTTP flows.
+- Evolve training into asynchronous execution with status tracking.
+- Persist job history and inference metadata.
+- Add authentication, authorization, and API hardening for production.
+- Build the frontend on top of the API while keeping the backend-first strategy.
