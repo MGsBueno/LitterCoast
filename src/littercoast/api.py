@@ -3,11 +3,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from .config import AppEnvironment, InferenceConfig, QRCodeConfig, TrainingConfig, get_default_environment
 from .schemas import (
     EnvironmentResponse,
+    ErrorResponse,
     InferenceRequest,
     InferenceResponse,
     MessageResponse,
@@ -73,10 +74,23 @@ def _build_qr_config(request: QRCodeRequest) -> QRCodeConfig:
     return config
 
 
+def _run_with_http_error_handling(action, failure_message: str):
+    try:
+        return action()
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{failure_message}: {exc}") from exc
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="LitterCoast API",
-        version="0.1.0",
+        version="0.2.0b0",
         description="API for LitterCoast training, inference, QR generation, and environment inspection.",
     )
 
@@ -88,14 +102,18 @@ def create_app() -> FastAPI:
     def get_environment() -> EnvironmentResponse:
         return EnvironmentResponse(environment=get_default_environment())
 
-    @app.post("/train", response_model=TrainingResponse)
+    @app.post(
+        "/train",
+        response_model=TrainingResponse,
+        responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    )
     def train_model(request: TrainingRequest) -> TrainingResponse:
         environment = _apply_environment(request.environment)
         config = _build_training_config(request)
-
-        from .training import ModelTrainer
-
-        ModelTrainer(training_config=config).run()
+        _run_with_http_error_handling(
+            lambda: __import__("littercoast.training", fromlist=["ModelTrainer"]).ModelTrainer(training_config=config).run(),
+            "training failed",
+        )
         return TrainingResponse(
             message="training finished",
             environment=environment,
@@ -104,14 +122,18 @@ def create_app() -> FastAPI:
             run_name=config.run_name,
         )
 
-    @app.post("/infer", response_model=InferenceResponse)
+    @app.post(
+        "/infer",
+        response_model=InferenceResponse,
+        responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    )
     def run_inference(request: InferenceRequest) -> InferenceResponse:
         environment = _apply_environment(request.environment)
         config = _build_inference_config(request)
-
-        from .inference import InferencePipeline
-
-        predictions = InferencePipeline(config).run()
+        predictions = _run_with_http_error_handling(
+            lambda: __import__("littercoast.inference", fromlist=["InferencePipeline"]).InferencePipeline(config).run(),
+            "inference failed",
+        )
         return InferenceResponse(
             message="inference finished",
             environment=environment,
@@ -119,14 +141,18 @@ def create_app() -> FastAPI:
             predictions_count=len(predictions),
         )
 
-    @app.post("/qr", response_model=QRCodeResponse)
+    @app.post(
+        "/qr",
+        response_model=QRCodeResponse,
+        responses={400: {"model": ErrorResponse}, 404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    )
     def generate_qr_code(request: QRCodeRequest) -> QRCodeResponse:
         environment = _apply_environment(request.environment)
         config = _build_qr_config(request)
-
-        from .qr_code import QRCodeGenerator
-
-        output_path = QRCodeGenerator(config).generate()
+        output_path = _run_with_http_error_handling(
+            lambda: __import__("littercoast.qr_code", fromlist=["QRCodeGenerator"]).QRCodeGenerator(config).generate(),
+            "qr generation failed",
+        )
         return QRCodeResponse(
             message="qr code generated",
             environment=environment,
