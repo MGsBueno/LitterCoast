@@ -1,7 +1,10 @@
 import sys
 import types
 import shutil
+import inspect
+from enum import Enum
 from pathlib import Path
+from typing import get_type_hints
 from uuid import uuid4
 
 import pytest
@@ -78,10 +81,24 @@ if "pydantic" not in sys.modules:
 
     class BaseModel:
         def __init__(self, **kwargs):
-            annotations = getattr(self.__class__, "__annotations__", {})
-            for name in annotations:
+            annotations = get_type_hints(self.__class__)
+            for name, annotation in annotations.items():
                 default = getattr(self.__class__, name, None)
-                setattr(self, name, kwargs.get(name, default))
+                value = kwargs.get(name, default)
+
+                enum_type = None
+                if inspect.isclass(annotation) and issubclass(annotation, Enum):
+                    enum_type = annotation
+                elif hasattr(annotation, "__args__"):
+                    for option in annotation.__args__:
+                        if inspect.isclass(option) and issubclass(option, Enum):
+                            enum_type = option
+                            break
+
+                if enum_type and isinstance(value, str):
+                    value = enum_type(value)
+
+                setattr(self, name, value)
 
         def model_dump(self):
             return self.__dict__.copy()
@@ -143,3 +160,66 @@ def workspace_dir():
         yield path
     finally:
         shutil.rmtree(path, ignore_errors=True)
+
+
+def _serialize_value(value):
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, list):
+        return [_serialize_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _serialize_value(item) for key, item in value.items()}
+    if hasattr(value, "__dict__"):
+        return {key: _serialize_value(item) for key, item in value.__dict__.items()}
+    return value
+
+
+class ApiResponse:
+    def __init__(self, status_code, payload):
+        self.status_code = status_code
+        self._payload = payload
+
+    def json(self):
+        return _serialize_value(self._payload)
+
+
+class ApiTestClient:
+    def __init__(self, app):
+        self.app = app
+
+    def get(self, path):
+        endpoint = self._resolve_endpoint(path, "GET")
+        return ApiResponse(200, endpoint())
+
+    def post(self, path, json=None):
+        endpoint = self._resolve_endpoint(path, "POST")
+        signature = inspect.signature(endpoint)
+        parameters = list(signature.parameters.values())
+
+        if not parameters:
+            return ApiResponse(200, endpoint())
+
+        request_parameter = parameters[0]
+        request_model = get_type_hints(endpoint)[request_parameter.name]
+        request_payload = request_model(**(json or {}))
+        return ApiResponse(200, endpoint(request_payload))
+
+    def _resolve_endpoint(self, path, method):
+        for route in self.app.routes:
+            route_path = route["path"] if isinstance(route, dict) else route.path
+            route_methods = {route["method"]} if isinstance(route, dict) else set(route.methods)
+            route_endpoint = route["endpoint"] if isinstance(route, dict) else route.endpoint
+
+            if route_path == path and method in route_methods:
+                return route_endpoint
+
+        raise AssertionError(f"route not found: {method} {path}")
+
+
+@pytest.fixture
+def api_client():
+    from littercoast.api import app
+
+    return ApiTestClient(app)
