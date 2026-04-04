@@ -13,21 +13,51 @@ LitterCoast is a coastal waste detection project built around a YOLOv8 pipeline.
 
 The repository now follows a more modular and object-oriented structure so training, inference, and QR code generation can evolve independently without concentrating all logic in standalone scripts.
 
+## Versioning
+
+The initial project baseline was tagged as `v0.1.0-beta`.
+
+This refactored line should be treated as a new iteration because the architecture changed significantly, introducing:
+
+- modular package structure
+- environment presets
+- automated tests
+- FastAPI service layer
+
+For that reason, this refactored line now follows the `v0.2.0-beta` release line.
+
+## Product Direction
+
+This repository is currently backend-first.
+
+The priority is to consolidate:
+
+- training and inference services
+- API contracts
+- environment configuration
+- test coverage
+- backend documentation
+
+The frontend is intentionally a later step and should consume the API instead of coupling UI logic directly to the training scripts.
+
 ## Current Architecture
 
 ```text
 LitterCoast/
 |-- src/
 |   `-- littercoast/
+|       |-- api.py
 |       |-- __init__.py
 |       |-- __main__.py
 |       |-- cli.py
 |       |-- config.py
 |       |-- inference.py
 |       |-- qr_code.py
+|       |-- schemas.py
 |       `-- training.py
 |-- bbox_image_inference.py
 |-- qr.py
+|-- tests/
 |-- yolo_bbox_training.py
 |-- pyproject.toml
 `-- README.md
@@ -129,20 +159,72 @@ Run the API with:
 python -m littercoast api
 ```
 
-Example payloads:
+Run in development mode:
+
+```bash
+python -m littercoast --environment local api --host 0.0.0.0 --port 8000
+```
+
+Interactive documentation:
+
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
+
+### Endpoints
+
+`GET /health`
+
+Response example:
 
 ```json
-POST /train
+{
+  "message": "ok"
+}
+```
+
+`GET /config/environment`
+
+Response example:
+
+```json
+{
+  "environment": "local"
+}
+```
+
+`POST /train`
+
+Request body example:
+
+```json
 {
   "environment": "local",
   "dataset_archive_path": "./data/dataset.tar.gz",
+  "extracted_dir": "./data/extracted/beach_plastic_litter_dataset_v2",
   "dataset_root": "./data/garbage_classification",
+  "dataset_yaml_path": "./data/waste.yaml",
+  "model_name": "yolov8n.pt",
   "epochs": 10
 }
 ```
 
+Response example:
+
 ```json
-POST /infer
+{
+  "message": "training finished",
+  "environment": "local",
+  "dataset_root": "data/garbage_classification",
+  "dataset_yaml_path": "data/waste.yaml",
+  "run_name": "garbage_detection_yolov8"
+}
+```
+
+`POST /infer`
+
+Request body example:
+
+```json
 {
   "environment": "local",
   "model_path": "./models/yolov8_model.pt",
@@ -151,14 +233,90 @@ POST /infer
 }
 ```
 
+Response example:
+
 ```json
-POST /qr
+{
+  "message": "inference finished",
+  "environment": "local",
+  "predictions_path": "outputs/yolo_predictions.json",
+  "predictions_count": 12
+}
+```
+
+`POST /qr`
+
+Request body example:
+
+```json
 {
   "environment": "local",
   "link": "https://forms.gle/PLDgtbQkSxKboPfv7",
   "output_path": "./outputs/qrcode_link.png"
 }
 ```
+
+Response example:
+
+```json
+{
+  "message": "qr code generated",
+  "environment": "local",
+  "output_path": "outputs/qrcode_link.png"
+}
+```
+
+### cURL Examples
+
+Healthcheck:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Training:
+
+```bash
+curl -X POST http://localhost:8000/train \
+  -H "Content-Type: application/json" \
+  -d "{\"environment\":\"local\",\"dataset_archive_path\":\"./data/dataset.tar.gz\",\"dataset_root\":\"./data/garbage_classification\",\"epochs\":10}"
+```
+
+Inference:
+
+```bash
+curl -X POST http://localhost:8000/infer \
+  -H "Content-Type: application/json" \
+  -d "{\"environment\":\"local\",\"model_path\":\"./models/yolov8_model.pt\",\"image_directory\":\"./data/images\",\"predictions_path\":\"./outputs/yolo_predictions.json\"}"
+```
+
+QR generation:
+
+```bash
+curl -X POST http://localhost:8000/qr \
+  -H "Content-Type: application/json" \
+  -d "{\"environment\":\"local\",\"link\":\"https://forms.gle/PLDgtbQkSxKboPfv7\",\"output_path\":\"./outputs/qrcode_link.png\"}"
+```
+
+### Current API Scope
+
+The API currently focuses on orchestration of backend services.
+
+Already covered:
+
+- environment selection
+- training orchestration
+- inference orchestration
+- QR generation
+- typed request and response schemas
+
+Planned for the next backend increments:
+
+- integration tests for real HTTP flows
+- async job execution for long-running training
+- persistence for job history and prediction metadata
+- authentication and authorization
+- CORS and production hardening
 
 Examples with custom paths:
 
