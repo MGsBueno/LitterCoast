@@ -98,7 +98,7 @@ Configured classes:
 Install the package dependencies:
 
 ```bash
-pip install -e .
+pip install -e .[dev]
 ```
 
 Create your environment file:
@@ -139,6 +139,26 @@ python -m littercoast --environment colab train
 python -m littercoast --environment local infer
 python -m littercoast --environment local qr
 python -m littercoast --environment local api --host 0.0.0.0 --port 8000
+```
+
+## Running Tests
+
+Run all unit tests:
+
+```bash
+pytest -q tests -m unit
+```
+
+Run all integration tests:
+
+```bash
+pytest -q tests -m integration
+```
+
+Run both suites together:
+
+```bash
+pytest -q tests -m "unit or integration"
 ```
 
 ## API
