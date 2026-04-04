@@ -114,18 +114,25 @@ if "pydantic" not in sys.modules:
 if "fastapi" not in sys.modules:
     fastapi_module = types.ModuleType("fastapi")
 
+    class HTTPException(Exception):
+        def __init__(self, status_code, detail):
+            super().__init__(detail)
+            self.status_code = status_code
+            self.detail = detail
+
     class FastAPI:
         def __init__(self, **kwargs):
             self.kwargs = kwargs
             self.routes = []
 
-        def get(self, path, response_model=None):
+        def get(self, path, response_model=None, **kwargs):
             def decorator(func):
                 self.routes.append(
                     {
                         "method": "GET",
                         "path": path,
                         "response_model": response_model,
+                        "kwargs": kwargs,
                         "endpoint": func,
                     }
                 )
@@ -133,13 +140,14 @@ if "fastapi" not in sys.modules:
 
             return decorator
 
-        def post(self, path, response_model=None):
+        def post(self, path, response_model=None, **kwargs):
             def decorator(func):
                 self.routes.append(
                     {
                         "method": "POST",
                         "path": path,
                         "response_model": response_model,
+                        "kwargs": kwargs,
                         "endpoint": func,
                     }
                 )
@@ -148,6 +156,7 @@ if "fastapi" not in sys.modules:
             return decorator
 
     fastapi_module.FastAPI = FastAPI
+    fastapi_module.HTTPException = HTTPException
     sys.modules["fastapi"] = fastapi_module
 
 
@@ -191,7 +200,12 @@ class ApiTestClient:
 
     def get(self, path):
         endpoint = self._resolve_endpoint(path, "GET")
-        return ApiResponse(200, endpoint())
+        try:
+            return ApiResponse(200, endpoint())
+        except Exception as exc:
+            status_code = getattr(exc, "status_code", 500)
+            detail = getattr(exc, "detail", str(exc))
+            return ApiResponse(status_code, {"detail": detail})
 
     def post(self, path, json=None):
         endpoint = self._resolve_endpoint(path, "POST")
@@ -204,7 +218,12 @@ class ApiTestClient:
         request_parameter = parameters[0]
         request_model = get_type_hints(endpoint)[request_parameter.name]
         request_payload = request_model(**(json or {}))
-        return ApiResponse(200, endpoint(request_payload))
+        try:
+            return ApiResponse(200, endpoint(request_payload))
+        except Exception as exc:
+            status_code = getattr(exc, "status_code", 500)
+            detail = getattr(exc, "detail", str(exc))
+            return ApiResponse(status_code, {"detail": detail})
 
     def _resolve_endpoint(self, path, method):
         for route in self.app.routes:

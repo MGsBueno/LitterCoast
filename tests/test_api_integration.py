@@ -118,3 +118,54 @@ def test_qr_post_returns_qr_summary(monkeypatch, api_client) -> None:
         "environment": "local",
         "output_path": str(Path("outputs/generated-qr.png")),
     }
+
+
+@pytest.mark.integration
+def test_infer_post_returns_not_found_for_missing_resource(monkeypatch, api_client) -> None:
+    class FakePipeline:
+        def __init__(self, config):
+            self.config = config
+
+        def run(self):
+            raise FileNotFoundError("model file not found")
+
+    monkeypatch.setattr("littercoast.inference.InferencePipeline", FakePipeline)
+
+    response = api_client.post("/infer", json={"environment": "local"})
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "model file not found"}
+
+
+@pytest.mark.integration
+def test_train_post_returns_bad_request_for_invalid_archive(monkeypatch, api_client) -> None:
+    class FakeTrainer:
+        def __init__(self, training_config):
+            self.training_config = training_config
+
+        def run(self):
+            raise ValueError("unsupported archive format")
+
+    monkeypatch.setattr("littercoast.training.ModelTrainer", FakeTrainer)
+
+    response = api_client.post("/train", json={"environment": "local"})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "unsupported archive format"}
+
+
+@pytest.mark.integration
+def test_qr_post_returns_internal_error_for_unexpected_failure(monkeypatch, api_client) -> None:
+    class FakeGenerator:
+        def __init__(self, config):
+            self.config = config
+
+        def generate(self):
+            raise RuntimeError("disk write failed")
+
+    monkeypatch.setattr("littercoast.qr_code.QRCodeGenerator", FakeGenerator)
+
+    response = api_client.post("/qr", json={"environment": "local"})
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "qr generation failed: disk write failed"}
