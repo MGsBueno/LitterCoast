@@ -32,6 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
     qr_parser.add_argument("--link", type=str, help="Link that will be encoded")
     qr_parser.add_argument("--output", type=Path, help="Output image path")
 
+    api_parser = subparsers.add_parser("api", help="Launch the FastAPI server")
+    api_parser.add_argument("--host", type=str, default="127.0.0.1", help="Host used by the API server")
+    api_parser.add_argument("--port", type=int, default=8000, help="Port used by the API server")
+    api_parser.add_argument("--reload", action="store_true", help="Enable auto-reload for local development")
+
     return parser
 
 
@@ -73,6 +78,17 @@ def main() -> None:
         if args.output:
             config.output_path = args.output
         QRCodeGenerator(config).generate()
+        return
+
+    if args.command == "api":
+        import uvicorn
+
+        uvicorn.run(
+            "littercoast.api:app",
+            host=args.host,
+            port=args.port,
+            reload=args.reload,
+        )
 
 
 if __name__ == "__main__":

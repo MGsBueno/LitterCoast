@@ -73,6 +73,67 @@ if "qrcode" not in sys.modules:
     sys.modules["qrcode"] = qrcode_module
 
 
+if "pydantic" not in sys.modules:
+    pydantic_module = types.ModuleType("pydantic")
+
+    class BaseModel:
+        def __init__(self, **kwargs):
+            annotations = getattr(self.__class__, "__annotations__", {})
+            for name in annotations:
+                default = getattr(self.__class__, name, None)
+                setattr(self, name, kwargs.get(name, default))
+
+        def model_dump(self):
+            return self.__dict__.copy()
+
+    def Field(default=None, **kwargs):
+        return default
+
+    pydantic_module.BaseModel = BaseModel
+    pydantic_module.Field = Field
+    sys.modules["pydantic"] = pydantic_module
+
+
+if "fastapi" not in sys.modules:
+    fastapi_module = types.ModuleType("fastapi")
+
+    class FastAPI:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+            self.routes = []
+
+        def get(self, path, response_model=None):
+            def decorator(func):
+                self.routes.append(
+                    {
+                        "method": "GET",
+                        "path": path,
+                        "response_model": response_model,
+                        "endpoint": func,
+                    }
+                )
+                return func
+
+            return decorator
+
+        def post(self, path, response_model=None):
+            def decorator(func):
+                self.routes.append(
+                    {
+                        "method": "POST",
+                        "path": path,
+                        "response_model": response_model,
+                        "endpoint": func,
+                    }
+                )
+                return func
+
+            return decorator
+
+    fastapi_module.FastAPI = FastAPI
+    sys.modules["fastapi"] = fastapi_module
+
+
 @pytest.fixture
 def workspace_dir():
     TEST_RUNS_DIR.mkdir(exist_ok=True)

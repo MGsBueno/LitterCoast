@@ -99,6 +99,7 @@ Or use the package CLI:
 python -m littercoast train
 python -m littercoast infer
 python -m littercoast qr
+python -m littercoast api
 ```
 
 You can also pick the setup directly in the command:
@@ -107,6 +108,56 @@ You can also pick the setup directly in the command:
 python -m littercoast --environment colab train
 python -m littercoast --environment local infer
 python -m littercoast --environment local qr
+python -m littercoast --environment local api --host 0.0.0.0 --port 8000
+```
+
+## API
+
+The project now includes a FastAPI backend so the frontend can be developed independently.
+
+Main endpoints:
+
+- `GET /health`
+- `GET /config/environment`
+- `POST /train`
+- `POST /infer`
+- `POST /qr`
+
+Run the API with:
+
+```bash
+python -m littercoast api
+```
+
+Example payloads:
+
+```json
+POST /train
+{
+  "environment": "local",
+  "dataset_archive_path": "./data/dataset.tar.gz",
+  "dataset_root": "./data/garbage_classification",
+  "epochs": 10
+}
+```
+
+```json
+POST /infer
+{
+  "environment": "local",
+  "model_path": "./models/yolov8_model.pt",
+  "image_directory": "./data/images",
+  "predictions_path": "./outputs/yolo_predictions.json"
+}
+```
+
+```json
+POST /qr
+{
+  "environment": "local",
+  "link": "https://forms.gle/PLDgtbQkSxKboPfv7",
+  "output_path": "./outputs/qrcode_link.png"
+}
 ```
 
 Examples with custom paths:
