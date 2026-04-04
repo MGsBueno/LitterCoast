@@ -14,6 +14,11 @@ dependencies = [
     "ultralytics",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
