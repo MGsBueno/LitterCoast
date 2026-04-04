@@ -1,6 +1,7 @@
 """LitterCoast package."""
 
 from .config import (
+    AppEnvironment,
     DetectionConfig,
     InferenceConfig,
     QRCodeConfig,
@@ -8,6 +9,7 @@ from .config import (
 )
 
 __all__ = [
+    "AppEnvironment",
     "DetectionConfig",
     "InferenceConfig",
     "QRCodeConfig",

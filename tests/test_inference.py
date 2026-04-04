@@ -1,9 +1,12 @@
 from pathlib import Path
 
+import pytest
+
 from littercoast.config import InferenceConfig
 from littercoast.inference import InferencePipeline, PredictionRepository
 
 
+@pytest.mark.unit
 def test_prediction_repository_appends_and_loads_predictions(workspace_dir: Path) -> None:
     repository = PredictionRepository(workspace_dir / "predictions.json")
 
@@ -25,6 +28,7 @@ class _FakeDetector:
         return [{"class": 0, "coordinates": [0, 0, 10, 10], "confidence": 0.95}]
 
 
+@pytest.mark.unit
 def test_inference_pipeline_processes_supported_images_only(monkeypatch, workspace_dir: Path) -> None:
     image_directory = workspace_dir / "images"
     image_directory.mkdir()

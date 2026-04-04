@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from littercoast.config import DetectionConfig, TrainingConfig
 from littercoast.training import DatasetPreparer, ModelTrainer
 
@@ -8,6 +10,7 @@ def _create_fake_image(path: Path) -> None:
     path.write_bytes(b"fake-image-content")
 
 
+@pytest.mark.unit
 def test_dataset_preparer_creates_split_structure_and_labels(workspace_dir: Path) -> None:
     detection_config = DetectionConfig(classes=["pet_bottle"])
     extracted_dir = workspace_dir / "source"
@@ -42,6 +45,7 @@ def test_dataset_preparer_creates_split_structure_and_labels(workspace_dir: Path
     )
 
 
+@pytest.mark.unit
 def test_dataset_preparer_writes_yaml_with_expected_content(workspace_dir: Path) -> None:
     detection_config = DetectionConfig(classes=["pet_bottle", "rope"])
     training_config = TrainingConfig(
@@ -78,6 +82,7 @@ class _FakeTrainerModel:
         self.train_calls.append(kwargs)
 
 
+@pytest.mark.unit
 def test_model_trainer_orchestrates_extraction_preparation_and_training(monkeypatch, workspace_dir: Path) -> None:
     detection_config = DetectionConfig(classes=["pet_bottle"])
     training_config = TrainingConfig(

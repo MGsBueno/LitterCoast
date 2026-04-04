@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import StrEnum
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -26,6 +27,28 @@ DEFAULT_CLASSES = [
 ]
 
 
+class AppEnvironment(StrEnum):
+    COLAB = "colab"
+    LOCAL = "local"
+    CUSTOM = "custom"
+
+
+def get_default_environment() -> AppEnvironment:
+    return AppEnvironment(get_env_str("LITTERCOAST_ENVIRONMENT", AppEnvironment.COLAB))
+
+
+def _resolve_path(name: str, fallback_by_environment: dict[AppEnvironment, str]) -> Path:
+    environment = get_default_environment()
+    fallback = fallback_by_environment.get(environment, fallback_by_environment[AppEnvironment.CUSTOM])
+    return get_env_path(name, fallback)
+
+
+def _resolve_str(name: str, fallback_by_environment: dict[AppEnvironment, str]) -> str:
+    environment = get_default_environment()
+    fallback = fallback_by_environment.get(environment, fallback_by_environment[AppEnvironment.CUSTOM])
+    return get_env_str(name, fallback)
+
+
 @dataclass(slots=True)
 class DetectionConfig:
     classes: list[str] = field(default_factory=lambda: list(DEFAULT_CLASSES))
@@ -38,18 +61,55 @@ class DetectionConfig:
 @dataclass(slots=True)
 class TrainingConfig:
     dataset_archive_path: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_DATASET_ARCHIVE_PATH", "/content/drive/MyDrive/dataset.tar.gz")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_DATASET_ARCHIVE_PATH",
+            {
+                AppEnvironment.COLAB: "/content/drive/MyDrive/dataset.tar.gz",
+                AppEnvironment.LOCAL: "./data/dataset.tar.gz",
+                AppEnvironment.CUSTOM: "/content/drive/MyDrive/dataset.tar.gz",
+            },
+        )
     )
     extracted_dir: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_EXTRACTED_DIR", "/content/datasets/beach_plastic_litter_dataset_v2")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_EXTRACTED_DIR",
+            {
+                AppEnvironment.COLAB: "/content/datasets/beach_plastic_litter_dataset_v2",
+                AppEnvironment.LOCAL: "./data/extracted/beach_plastic_litter_dataset_v2",
+                AppEnvironment.CUSTOM: "/content/datasets/beach_plastic_litter_dataset_v2",
+            },
+        )
     )
     dataset_root: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_DATASET_ROOT", "/content/datasets/garbage_classification")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_DATASET_ROOT",
+            {
+                AppEnvironment.COLAB: "/content/datasets/garbage_classification",
+                AppEnvironment.LOCAL: "./data/garbage_classification",
+                AppEnvironment.CUSTOM: "/content/datasets/garbage_classification",
+            },
+        )
     )
     dataset_yaml_path: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_DATASET_YAML_PATH", "/content/datasets/waste.yaml")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_DATASET_YAML_PATH",
+            {
+                AppEnvironment.COLAB: "/content/datasets/waste.yaml",
+                AppEnvironment.LOCAL: "./data/waste.yaml",
+                AppEnvironment.CUSTOM: "/content/datasets/waste.yaml",
+            },
+        )
     )
-    model_name: str = field(default_factory=lambda: get_env_str("LITTERCOAST_MODEL_NAME", "yolov8n.pt"))
+    model_name: str = field(
+        default_factory=lambda: _resolve_str(
+            "LITTERCOAST_MODEL_NAME",
+            {
+                AppEnvironment.COLAB: "yolov8n.pt",
+                AppEnvironment.LOCAL: "yolov8n.pt",
+                AppEnvironment.CUSTOM: "yolov8n.pt",
+            },
+        )
+    )
     epochs: int = field(default_factory=lambda: get_env_int("LITTERCOAST_EPOCHS", 50))
     image_size: int = field(default_factory=lambda: get_env_int("LITTERCOAST_IMAGE_SIZE", 640))
     batch_size: int = field(default_factory=lambda: get_env_int("LITTERCOAST_BATCH_SIZE", 16))
@@ -68,13 +128,34 @@ class TrainingConfig:
 @dataclass(slots=True)
 class InferenceConfig:
     predictions_path: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_PREDICTIONS_PATH", "/content/drive/My Drive/yolo_predictions.json")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_PREDICTIONS_PATH",
+            {
+                AppEnvironment.COLAB: "/content/drive/My Drive/yolo_predictions.json",
+                AppEnvironment.LOCAL: "./outputs/yolo_predictions.json",
+                AppEnvironment.CUSTOM: "/content/drive/My Drive/yolo_predictions.json",
+            },
+        )
     )
     model_path: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_MODEL_PATH", "/content/drive/My Drive/yolov8_model.pt")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_MODEL_PATH",
+            {
+                AppEnvironment.COLAB: "/content/drive/My Drive/yolov8_model.pt",
+                AppEnvironment.LOCAL: "./models/yolov8_model.pt",
+                AppEnvironment.CUSTOM: "/content/drive/My Drive/yolov8_model.pt",
+            },
+        )
     )
     image_directory: Path = field(
-        default_factory=lambda: get_env_path("LITTERCOAST_IMAGE_DIRECTORY", "/content/drive/My Drive/images")
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_IMAGE_DIRECTORY",
+            {
+                AppEnvironment.COLAB: "/content/drive/My Drive/images",
+                AppEnvironment.LOCAL: "./data/images",
+                AppEnvironment.CUSTOM: "/content/drive/My Drive/images",
+            },
+        )
     )
     allowed_extensions: tuple[str, ...] = (".jpg", ".jpeg", ".png")
 
@@ -82,7 +163,16 @@ class InferenceConfig:
 @dataclass(slots=True)
 class QRCodeConfig:
     link: str = field(default_factory=lambda: get_env_str("LITTERCOAST_QR_LINK", "https://forms.gle/PLDgtbQkSxKboPfv7"))
-    output_path: Path = field(default_factory=lambda: get_env_path("LITTERCOAST_QR_OUTPUT_PATH", "qrcode_link.png"))
+    output_path: Path = field(
+        default_factory=lambda: _resolve_path(
+            "LITTERCOAST_QR_OUTPUT_PATH",
+            {
+                AppEnvironment.COLAB: "qrcode_link.png",
+                AppEnvironment.LOCAL: "./outputs/qrcode_link.png",
+                AppEnvironment.CUSTOM: "qrcode_link.png",
+            },
+        )
+    )
     version: int = field(default_factory=lambda: get_env_int("LITTERCOAST_QR_VERSION", 1))
     box_size: int = field(default_factory=lambda: get_env_int("LITTERCOAST_QR_BOX_SIZE", 10))
     border: int = field(default_factory=lambda: get_env_int("LITTERCOAST_QR_BORDER", 4))

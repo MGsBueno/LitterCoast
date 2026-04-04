@@ -1,7 +1,8 @@
 import argparse
+import os
 from pathlib import Path
 
-from .config import InferenceConfig, QRCodeConfig, TrainingConfig
+from .config import AppEnvironment, InferenceConfig, QRCodeConfig, TrainingConfig
 from .inference import InferencePipeline
 from .qr_code import QRCodeGenerator
 from .training import ModelTrainer
@@ -9,6 +10,11 @@ from .training import ModelTrainer
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="LitterCoast project utilities")
+    parser.add_argument(
+        "--environment",
+        choices=[environment.value for environment in AppEnvironment],
+        help="Runtime environment preset used to resolve default paths",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     train_parser = subparsers.add_parser("train", help="Extract dataset and train YOLO")
@@ -32,6 +38,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.environment:
+        os.environ["LITTERCOAST_ENVIRONMENT"] = args.environment
 
     if args.command == "train":
         config = TrainingConfig()

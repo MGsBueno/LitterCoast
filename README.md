@@ -79,6 +79,12 @@ cp .env.example .env
 
 All default paths and runtime parameters can now be overridden through `.env`.
 
+You can define the runtime preset with `LITTERCOAST_ENVIRONMENT`:
+
+- `colab`: paths aimed at Google Colab + Drive
+- `local`: paths aimed at local folders such as `./data`, `./models`, and `./outputs`
+- `custom`: keeps the explicit values from `.env` as the source of truth
+
 Run with the preserved scripts:
 
 ```bash
@@ -93,6 +99,14 @@ Or use the package CLI:
 python -m littercoast train
 python -m littercoast infer
 python -m littercoast qr
+```
+
+You can also pick the setup directly in the command:
+
+```bash
+python -m littercoast --environment colab train
+python -m littercoast --environment local infer
+python -m littercoast --environment local qr
 ```
 
 Examples with custom paths:
