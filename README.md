@@ -1,32 +1,53 @@
 <h1 align="center">LitterCoast</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.x-blue?logo=python">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python">
   <img src="https://img.shields.io/badge/YOLOv8-Ultralytics-orange">
   <img src="https://img.shields.io/badge/PyTorch-Deep%20Learning-red?logo=pytorch">
-  <img src="https://img.shields.io/badge/Computer%20Vision-Bounding%20Box%20Detection-green">
-  <img src="https://img.shields.io/badge/Google%20Colab-Workflow-yellow">
+  <img src="https://img.shields.io/badge/Architecture-OO%20%2B%20Modular-success">
 </p>
 
 ## Overview
 
-This repository currently focuses on a **bounding box detection pipeline** for coastal waste images.
+LitterCoast is a coastal waste detection project built around a YOLOv8 pipeline.
 
-Implemented components include:
+The repository now follows a more modular and object-oriented structure so training, inference, and QR code generation can evolve independently without concentrating all logic in standalone scripts.
 
-- YOLOv8-based object detection
-- Dataset download, extraction, and preparation for training
-- Model training in Google Colab
-- Model storage in Google Drive for later inference
-- Image ingestion and result storage through Google Drive
+## Current Architecture
 
-The current dataset source is the **Sea Computer Vision Project**, which contains **8,674 labeled shoreline images** and is available on Roboflow:
+```text
+LitterCoast/
+|-- src/
+|   `-- littercoast/
+|       |-- __init__.py
+|       |-- __main__.py
+|       |-- cli.py
+|       |-- config.py
+|       |-- inference.py
+|       |-- qr_code.py
+|       `-- training.py
+|-- bbox_image_inference.py
+|-- qr.py
+|-- yolo_bbox_training.py
+|-- pyproject.toml
+`-- README.md
+```
+
+## OO Improvements Applied
+
+- `TrainingConfig`, `InferenceConfig`, and `QRCodeConfig` centralize configuration.
+- `ArchiveExtractor`, `DatasetPreparer`, and `ModelTrainer` separate dataset extraction, preparation, and training responsibilities.
+- `ObjectDetector`, `PredictionRepository`, and `InferencePipeline` split inference into detection, persistence, and orchestration.
+- `QRCodeGenerator` isolates QR creation logic.
+- Legacy scripts were preserved as thin entrypoints that reuse the package code.
+
+## Dataset
+
+The current dataset source remains the Sea Computer Vision Project on Roboflow:
 
 - https://universe.roboflow.com/hongmo/sea-ezx3q
 
-## Detection Classes
-
-The current bbox model is configured with 13 classes:
+Configured classes:
 
 - pet_bottle
 - other_bottle
@@ -42,32 +63,41 @@ The current bbox model is configured with 13 classes:
 - others
 - fragment
 
-## Repository Files
+## How To Run
 
-- `yolo_bbox_training.py`: prepares the dataset structure and trains the YOLOv8 bbox model
-- `bbox_image_inference.py`: loads images from Google Drive and stores prediction outputs in JSON
-- `qr.py`: auxiliary QR code generation script
+Install the package dependencies:
 
-## Workflow
+```bash
+pip install -e .
+```
 
-1. Images are collected through a Google Forms workflow.
-2. Uploaded files are stored in Google Drive.
-3. The dataset is downloaded from an external link as an archive file such as `.zip` or `.tar`.
-4. In Google Colab, the dataset archive is extracted and prepared for training.
-5. The YOLOv8 bbox model is trained.
-6. The trained model file is saved to Google Drive.
-7. Later, the saved model is loaded from Google Drive for inference.
-8. Predictions are written back to Google Drive as output data.
+Run with the preserved scripts:
 
-## Execution Context
+```bash
+python yolo_bbox_training.py
+python bbox_image_inference.py
+python qr.py
+```
 
-The current scripts are written around a **Google Colab + Google Drive** environment and use paths such as `/content/drive/...` and `/content/datasets/...`.
+Or use the package CLI:
 
-Before running the code, you should adapt:
+```bash
+python -m littercoast train
+python -m littercoast infer
+python -m littercoast qr
+```
 
-- dataset download link
-- dataset archive paths
-- Google Drive mount steps
-- trained model path in Drive
-- output directories
-- any local environment dependency handling
+Examples with custom paths:
+
+```bash
+python -m littercoast train --archive /content/drive/MyDrive/dataset.tar.gz --dataset-root /content/datasets/garbage_classification
+python -m littercoast infer --model /content/drive/My\ Drive/yolov8_model.pt --images /content/drive/My\ Drive/images --output /content/drive/My\ Drive/yolo_predictions.json
+python -m littercoast qr --link https://forms.gle/PLDgtbQkSxKboPfv7 --output qrcode_link.png
+```
+
+## Next Structural Suggestions
+
+- Add automated tests for `DatasetPreparer` and `PredictionRepository`.
+- Move environment-specific paths to `.env` or a config file.
+- Introduce logging instead of `print`.
+- Add a dedicated `tests/` directory and CI validation.
