@@ -102,9 +102,9 @@ All default paths and runtime parameters can now be overridden through `.env`.
 
 You can define the runtime preset with `LITTERCOAST_ENVIRONMENT`:
 
-- `colab`: paths aimed at Google Colab + Drive
 - `local`: paths aimed at local folders such as `./data`, `./models`, and `./outputs`
 - `custom`: keeps the explicit values from `.env` as the source of truth
+- `colab`: paths aimed at Google Colab + Drive when you opt in explicitly
 
 Run with the preserved scripts:
 
@@ -120,15 +120,16 @@ Or use the package CLI:
 python -m littercoast train
 python -m littercoast infer
 python -m littercoast qr
+python -m littercoast api --host 0.0.0.0 --port 8000 --reload
 ```
 
-You can also pick the setup directly in the command:
+You can also pick the setup directly in the command when you need to override the default:
 
 ```bash
-python -m littercoast --environment colab train
 python -m littercoast --environment local infer
 python -m littercoast --environment local qr
 python -m littercoast --environment local api --host 0.0.0.0 --port 8000
+python -m littercoast --environment colab train
 ```
 
 ## Running Tests
@@ -166,13 +167,13 @@ Main endpoints:
 Run the API with:
 
 ```bash
-python -m littercoast api
+python -m littercoast api --host 0.0.0.0 --port 8000 --reload
 ```
 
-Run in development mode:
+Run with an explicit Colab preset when needed:
 
 ```bash
-python -m littercoast --environment local api --host 0.0.0.0 --port 8000
+python -m littercoast --environment colab api --host 0.0.0.0 --port 8000
 ```
 
 Interactive documentation:
