@@ -8,11 +8,11 @@ from pathlib import Path
 from .env import get_env_float, get_env_int, get_env_path, get_env_str, load_env_file
 
 
-if sys.version_info >= (3, 10):
+if sys.version_info >= (3, 11):
     from enum import StrEnum
-else:  # pragma: no cover - Python 3.9 compatibility
+else:  # pragma: no cover - Python 3.10 compatibility
     class StrEnum(str, Enum):
-        """Compatibility shim for Python 3.9."""
+        """Compatibility shim for Python 3.10."""
 
 
 load_env_file()
