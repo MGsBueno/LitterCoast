@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -7,11 +8,11 @@ from pathlib import Path
 from .env import get_env_float, get_env_int, get_env_path, get_env_str, load_env_file
 
 
-try:
+if sys.version_info >= (3, 11):
     from enum import StrEnum
-except ImportError:  # pragma: no cover - Python 3.10 compatibility
+else:  # pragma: no cover - Python 3.10 compatibility
     class StrEnum(str, Enum):
-        pass
+        """Compatibility shim for Python 3.10."""
 
 
 load_env_file()
@@ -41,7 +42,7 @@ class AppEnvironment(StrEnum):
 
 
 def get_default_environment() -> AppEnvironment:
-    return AppEnvironment(get_env_str("LITTERCOAST_ENVIRONMENT", AppEnvironment.COLAB))
+    return AppEnvironment(get_env_str("LITTERCOAST_ENVIRONMENT", AppEnvironment.LOCAL))
 
 
 def _resolve_environment(environment: AppEnvironment | None = None) -> AppEnvironment:
@@ -71,42 +72,42 @@ def _resolve_str(
 TRAINING_ARCHIVE_DEFAULTS = {
     AppEnvironment.COLAB: "/content/drive/MyDrive/dataset.tar.gz",
     AppEnvironment.LOCAL: "./data/dataset.tar.gz",
-    AppEnvironment.CUSTOM: "/content/drive/MyDrive/dataset.tar.gz",
+    AppEnvironment.CUSTOM: "./data/dataset.tar.gz",
 }
 TRAINING_EXTRACTED_DEFAULTS = {
     AppEnvironment.COLAB: "/content/datasets/beach_plastic_litter_dataset_v2",
     AppEnvironment.LOCAL: "./data/extracted/beach_plastic_litter_dataset_v2",
-    AppEnvironment.CUSTOM: "/content/datasets/beach_plastic_litter_dataset_v2",
+    AppEnvironment.CUSTOM: "./data/extracted/beach_plastic_litter_dataset_v2",
 }
 TRAINING_ROOT_DEFAULTS = {
     AppEnvironment.COLAB: "/content/datasets/garbage_classification",
     AppEnvironment.LOCAL: "./data/garbage_classification",
-    AppEnvironment.CUSTOM: "/content/datasets/garbage_classification",
+    AppEnvironment.CUSTOM: "./data/garbage_classification",
 }
 TRAINING_YAML_DEFAULTS = {
     AppEnvironment.COLAB: "/content/datasets/waste.yaml",
     AppEnvironment.LOCAL: "./data/waste.yaml",
-    AppEnvironment.CUSTOM: "/content/datasets/waste.yaml",
+    AppEnvironment.CUSTOM: "./data/waste.yaml",
 }
 INFERENCE_PREDICTIONS_DEFAULTS = {
     AppEnvironment.COLAB: "/content/drive/My Drive/yolo_predictions.json",
     AppEnvironment.LOCAL: "./outputs/yolo_predictions.json",
-    AppEnvironment.CUSTOM: "/content/drive/My Drive/yolo_predictions.json",
+    AppEnvironment.CUSTOM: "./outputs/yolo_predictions.json",
 }
 INFERENCE_MODEL_DEFAULTS = {
     AppEnvironment.COLAB: "/content/drive/My Drive/yolov8_model.pt",
     AppEnvironment.LOCAL: "./models/yolov8_model.pt",
-    AppEnvironment.CUSTOM: "/content/drive/My Drive/yolov8_model.pt",
+    AppEnvironment.CUSTOM: "./models/yolov8_model.pt",
 }
 INFERENCE_IMAGE_DEFAULTS = {
     AppEnvironment.COLAB: "/content/drive/My Drive/images",
     AppEnvironment.LOCAL: "./data/images",
-    AppEnvironment.CUSTOM: "/content/drive/My Drive/images",
+    AppEnvironment.CUSTOM: "./data/images",
 }
 QR_OUTPUT_DEFAULTS = {
     AppEnvironment.COLAB: "qrcode_link.png",
     AppEnvironment.LOCAL: "./outputs/qrcode_link.png",
-    AppEnvironment.CUSTOM: "qrcode_link.png",
+    AppEnvironment.CUSTOM: "./outputs/qrcode_link.png",
 }
 
 
